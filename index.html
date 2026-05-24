@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2d6a4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Horizon">
+<title>Horizon Budget</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/app.css">
+<style>
+/* Onglets accueil */
+.accueil-tabs {
+  display: flex; gap: 6px;
+  padding: 0 14px 12px; margin-top: -4px;
+}
+.accueil-tab {
+  flex: 1; padding: 8px; border-radius: var(--radius-md);
+  text-align: center; font-size: 0.72rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text3);
+}
+.accueil-tab.active {
+  background: var(--green-pale); border-color: var(--green-main);
+  color: var(--green-dark);
+}
+
+/* Stripe latérale */
+.tx-stripe {
+  width: 3px; height: 32px; border-radius: 100px; flex-shrink: 0;
+}
+
+/* ==========================================
+   ÉCRAN ACTIVATION LICENCE
+   ========================================== */
+#screen-activation {
+  position: fixed; inset: 0; z-index: 999;
+  background: linear-gradient(160deg, var(--green-ultra) 0%, #ffffff 60%, var(--green-pale) 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.activation-logo {
+  margin-bottom: 20px;
+}
+
+.activation-title {
+  font-family: var(--font-head);
+  font-size: 1.8rem; font-weight: 700;
+  color: var(--green-dark); margin-bottom: 6px;
+}
+
+.activation-subtitle {
+  font-size: 0.78rem; color: var(--text2);
+  margin-bottom: 32px; line-height: 1.5;
+}
+
+.activation-card {
+  width: 100%; max-width: 340px;
+  background: white; border-radius: 20px;
+  border: 1px solid var(--border);
+  padding: 24px; margin-bottom: 16px;
+  box-shadow: 0 8px 32px rgba(30,77,53,0.1);
+}
+
+.activation-label {
+  font-size: 0.65rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text3); margin-bottom: 10px;
+  text-align: left;
+}
+
+.activation-input {
+  width: 100%;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem; font-weight: 700;
+  color: var(--green-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  outline: none;
+  text-align: center;
+  background: var(--green-ultra);
+  transition: border-color 0.2s;
+  margin-bottom: 16px;
+}
+.activation-input:focus { border-color: var(--green-main); }
+.activation-input.error { border-color: var(--red); background: var(--red-bg); }
+.activation-input.success { border-color: var(--green-ok); background: rgba(34,197,94,0.05); }
+
+.activation-error {
+  font-size: 0.72rem; color: var(--red);
+  margin-bottom: 12px; display: none;
+  background: var(--red-bg); border: 1px solid var(--red-border);
+  border-radius: 8px; padding: 8px 12px;
+}
+
+.activation-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(145deg, var(--green-mid), var(--green-dark));
+  color: white; border: none; border-radius: 12px;
+  font-family: var(--font-body); font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+  box-shadow: 0 6px 18px rgba(45,106,79,0.35);
+}
+.activation-btn:active { transform: scale(0.97); }
+.activation-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.activation-footer {
+  font-size: 0.65rem; color: var(--text3);
+  max-width: 280px; line-height: 1.5;
+}
+
+.activation-footer a {
+  color: var(--green-main); text-decoration: none; font-weight: 600;
+}
+
+/* Animation succès */
+@keyframes successPop {
+  0%   { transform: scale(0.8); opacity: 0; }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+.success-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--green-dark);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.4s;
+}
+.success-overlay.show { opacity: 1; pointer-events: all; }
+
+.success-checkmark {
+  font-size: 4rem; margin-bottom: 16px;
+  animation: successPop 0.5s ease forwards;
+}
+.success-text {
+  font-family: var(--font-head);
+  font-size: 1.4rem; font-weight: 700;
+  color: white; margin-bottom: 8px;
+}
+.success-sub { font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+</style>
+</head>
+<body>
+
+<!-- ================================ -->
+<!-- ÉCRAN ACTIVATION LICENCE        -->
+<!-- ================================ -->
+<div id="screen-activation">
+  <div class="activation-logo">
+    <svg width="72" height="72" viewBox="0 0 60 60" fill="none">
+      <circle cx="30" cy="30" r="27" stroke="#2d6a4f" stroke-width="2.5" fill="none"/>
+      <circle cx="30" cy="30" r="18" stroke="#2d6a4f" stroke-width="2.5" fill="none"/>
+      <circle cx="30" cy="30" r="10" stroke="#2d6a4f" stroke-width="2.5" fill="none"/>
+      <circle cx="30" cy="30" r="4"  fill="#2d6a4f"/>
+    </svg>
+  </div>
+
+  <div class="activation-title">Horizon Budget</div>
+  <div class="activation-subtitle">Votre gestionnaire de budget familial.<br>Entrez votre clé de licence pour commencer.</div>
+
+  <div class="activation-card">
+    <div class="activation-label">Clé de licence</div>
+    <input
+      type="text"
+      id="licence-input"
+      class="activation-input"
+      placeholder="HRZN-XXXX-XXXX-XXXX"
+      maxlength="19"
+      oninput="formatLicenceInput(this)"
+      onkeydown="if(event.key==='Enter') activerLicence()"
+    >
+    <div class="activation-error" id="activation-error"></div>
+    <button class="activation-btn" id="activation-btn" onclick="activerLicence()">
+      🔑 Activer ma licence
+    </button>
+  </div>
+
+  <div class="activation-footer">
+    Vous avez acheté Horizon Budget sur
+    <a href="https://www.horizonpme.fr" target="_blank">horizonpme.fr</a><br>
+    et vous avez reçu votre clé par email.
+  </div>
+</div>
+
+<!-- Animation succès activation -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-checkmark">✅</div>
+  <div class="success-text">Licence activée !</div>
+  <div class="success-sub">Bienvenue sur Horizon Budget</div>
+</div>
+
+<!-- ================================ -->
+<!-- APPLICATION PRINCIPALE          -->
+<!-- ================================ -->
+<div id="app" style="display:none">
+
+  <!-- ÉCRAN 1 : ACCUEIL -->
+  <div class="screen active" id="screen-accueil">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="screen-body">
+      <div style="padding:12px 18px 10px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <svg width="18" height="18" viewBox="0 0 60 60" fill="none">
+              <circle cx="30" cy="30" r="27" stroke="#2d6a4f" stroke-width="3" fill="none"/>
+              <circle cx="30" cy="30" r="18" stroke="#2d6a4f" stroke-width="3" fill="none"/>
+              <circle cx="30" cy="30" r="10" stroke="#2d6a4f" stroke-width="3" fill="none"/>
+              <circle cx="30" cy="30" r="4"  fill="#2d6a4f"/>
+            </svg>
+            <div style="font-family:var(--font-head);font-size:1rem;font-weight:700;color:var(--green-dark)" id="accueil-foyer">Mon Foyer</div>
+          </div>
+          <div style="font-size:0.62rem;color:var(--text3);margin-top:2px" id="accueil-mois">Mai 2026</div>
+        </div>
+        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(145deg,var(--green-mid),var(--green-dark));display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:white;box-shadow:0 3px 8px rgba(45,106,79,0.35)">HZ</div>
+      </div>
+      <div style="margin:0 14px 12px;background:linear-gradient(145deg,var(--green-dark),var(--green-main) 60%,var(--green-mid));border-radius:22px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 12px 32px rgba(30,77,53,0.3)">
+        <svg style="position:absolute;top:10px;right:14px;opacity:0.1" width="80" height="80" viewBox="0 0 60 60" fill="none">
+          <circle cx="30" cy="30" r="28" stroke="white" stroke-width="1.5" fill="none"/>
+          <circle cx="30" cy="30" r="20" stroke="white" stroke-width="1.5" fill="none"/>
+          <circle cx="30" cy="30" r="12" stroke="white" stroke-width="1.5" fill="none"/>
+          <circle cx="30" cy="30" r="5"  fill="white"/>
+        </svg>
+        <div style="display:flex;margin-bottom:14px;position:relative;z-index:1">
+          <div style="flex:1">
+            <div style="font-size:0.6rem;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;display:flex;align-items:center;gap:5px"><div style="width:5px;height:5px;border-radius:50%;background:#86efac"></div>Solde réel</div>
+            <div style="font-family:var(--font-head);font-size:1.5rem;font-weight:700;color:white" id="accueil-solde-reel">0,00 €</div>
+          </div>
+          <div style="width:1px;background:rgba(255,255,255,0.15);margin:0 16px"></div>
+          <div style="flex:1">
+            <div style="font-size:0.6rem;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;display:flex;align-items:center;gap:5px"><div style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.4)"></div>Solde virtuel</div>
+            <div style="font-family:var(--font-head);font-size:1.5rem;font-weight:700;color:rgba(255,255,255,0.55)" id="accueil-solde-virtuel">0,00 €</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:12px;border-top:1px solid rgba(255,255,255,0.12);position:relative;z-index:1">
+          <div style="background:rgba(255,255,255,0.1);border-radius:100px;padding:3px 9px;font-size:0.6rem;color:rgba(255,255,255,0.8)">📈 <span id="accueil-recettes">+0,00 €</span></div>
+          <div style="background:rgba(255,255,255,0.1);border-radius:100px;padding:3px 9px;font-size:0.6rem;color:rgba(255,255,255,0.8)">📉 <span id="accueil-depenses">-0,00 €</span></div>
+          <div style="background:rgba(255,255,255,0.1);border-radius:100px;padding:3px 9px;font-size:0.6rem;color:rgba(255,255,255,0.8)">⬜ <span id="accueil-pill-virtuels">-0,00 €</span></div>
+        </div>
+      </div>
+      <div class="accueil-tabs">
+        <div class="accueil-tab active" id="tab-charges"   onclick="Screens.accueil.switchOnglet('charges')">📋 Charges & Budgets</div>
+        <div class="accueil-tab"        id="tab-cagnottes" onclick="Screens.accueil.switchOnglet('cagnottes')">🏦 Mes cagnottes</div>
+      </div>
+      <div id="accueil-onglet-content"></div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 2 : RELEVÉ -->
+  <div class="screen" id="screen-releve">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="screen-body">
+      <div style="padding:12px 18px 10px;display:flex;justify-content:space-between;align-items:center">
+        <div><div class="header-title">Relevé</div><div style="font-size:0.67rem;color:var(--text3)" id="releve-count">0 opération</div></div>
+        <div style="font-size:0.68rem;color:var(--green-main);background:var(--green-pale);border:1px solid var(--border);padding:5px 12px;border-radius:100px" id="releve-mois">Mai 2026</div>
+      </div>
+      <div class="chips-row" id="releve-comptes-chips"></div>
+      <div id="releve-alerte" style="display:none;margin:0 14px 10px;background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:var(--radius-md);padding:10px 14px;align-items:center;gap:8px;font-size:0.7rem;color:var(--orange)">
+        ⚠️ <span id="releve-alerte-count"></span>
+      </div>
+      <div id="releve-list" style="padding:0 14px"></div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 3 : SAISIE -->
+  <div class="screen" id="screen-saisie">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="screen-body">
+      <div class="screen-header">
+        <div class="back-btn" onclick="Router.back()">←</div>
+        <div class="header-title">Nouvelle opération</div>
+      </div>
+      <div class="type-toggle">
+        <div class="toggle-btn active-debit" id="toggle-debit"  onclick="Screens.saisie.updateType('debit')">💸 Dépense</div>
+        <div class="toggle-btn"              id="toggle-credit" onclick="Screens.saisie.updateType('credit')">💰 Recette</div>
+      </div>
+      <div class="amount-display">
+        <div class="amount-label">Montant</div>
+        <div class="amount-value" id="saisie-amount" style="color:var(--red)">0,00 €<span class="amount-cursor" id="saisie-cursor" style="background:var(--red)"></span></div>
+      </div>
+      <div class="field-group">
+        <div class="field" onclick="Screens.saisie.promptLibelle()">
+          <div class="row-icon" style="background:var(--green-pale)">🏷️</div>
+          <div style="flex:1"><div class="field-label">Libellé</div><div class="field-value empty" id="saisie-libelle-val">Saisir un libellé...</div></div>
+          <div class="row-arrow">›</div>
+        </div>
+        <div class="field" onclick="Screens.saisie.openCatPicker()">
+          <div class="row-icon" style="background:var(--green-pale)">📂</div>
+          <div style="flex:1"><div class="field-label">Catégorie</div><div class="field-value empty" id="saisie-cat-val">Choisir...</div></div>
+          <div class="row-arrow">›</div>
+        </div>
+        <div class="field" onclick="Screens.saisie.openComptePicker()">
+          <div class="row-icon" style="background:var(--green-pale)">🏦</div>
+          <div style="flex:1"><div class="field-label">Compte</div><div class="field-value" id="saisie-compte-val">Compte Courant</div></div>
+          <div class="row-arrow">›</div>
+        </div>
+        <div class="field" id="saisie-bv-row" onclick="Screens.saisie.openBudgetVirtuelPicker()" style="display:none">
+          <div class="row-icon" style="background:var(--pearl-bg)">⬜</div>
+          <div style="flex:1"><div class="field-label">Déduire d'une cagnotte</div><div class="field-value" id="saisie-bv-val" style="color:var(--pearl-dark)">Aucun</div></div>
+          <div class="row-arrow">›</div>
+        </div>
+        <div class="field">
+          <div class="row-icon" style="background:var(--green-pale)">📅</div>
+          <div style="flex:1"><div class="field-label">Date</div><div class="field-value" id="saisie-date-val">Aujourd'hui</div></div>
+        </div>
+      </div>
+      <div class="numpad">
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('1')">1</div>
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('2')">2</div>
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('3')">3</div>
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('4')">4</div>
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('5')">5</div>
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('6')">6</div>
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('7')">7</div>
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('8')">8</div>
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('9')">9</div>
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('del')" style="font-size:0.9rem">⌫</div>
+        <div class="num-btn" onclick="Screens.saisie.numpad?.press('0')">0</div>
+        <div class="num-btn confirm" onclick="Screens.saisie.save()">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 4 : STATISTIQUES -->
+  <div class="screen" id="screen-stats">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="screen-body">
+      <div style="padding:12px 18px 10px;display:flex;justify-content:space-between;align-items:center">
+        <div><div class="header-title">Statistiques</div><div style="font-size:0.67rem;color:var(--text3)" id="stats-mois">Mai 2026</div></div>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 14px;margin-bottom:14px">
+        <div style="flex:1;background:var(--green-ok-bg);border:1px solid rgba(34,197,94,0.2);border-radius:var(--radius-md);padding:12px;text-align:center">
+          <div style="font-size:0.6rem;color:var(--text3);margin-bottom:4px">Recettes</div>
+          <div style="font-family:var(--font-head);font-size:0.95rem;font-weight:700;color:var(--green-ok)" id="stats-total-rec">0,00 €</div>
+        </div>
+        <div style="flex:1;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:12px;text-align:center">
+          <div style="font-size:0.6rem;color:var(--text3);margin-bottom:4px">Dépenses</div>
+          <div style="font-family:var(--font-head);font-size:0.95rem;font-weight:700;color:var(--red)" id="stats-total-dep">0,00 €</div>
+        </div>
+        <div style="flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-md);padding:12px;text-align:center">
+          <div style="font-size:0.6rem;color:var(--text3);margin-bottom:4px">Solde</div>
+          <div style="font-family:var(--font-head);font-size:0.95rem;font-weight:700" id="stats-solde-mois">0,00 €</div>
+        </div>
+      </div>
+      <div style="margin:0 14px 14px;background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border2);padding:14px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:0.72rem;font-weight:600">Évolution 6 mois</div>
+          <div style="display:flex;gap:10px">
+            <div style="display:flex;align-items:center;gap:4px;font-size:0.6rem;color:var(--text2)"><div style="width:12px;height:2px;background:var(--green-ok);border-radius:2px"></div>Recettes</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:0.6rem;color:var(--text2)"><div style="width:12px;height:2px;background:var(--red);border-radius:2px"></div>Dépenses</div>
+          </div>
+        </div>
+        <div id="stats-chart"></div>
+      </div>
+      <div class="section-title">Dépenses par catégorie</div>
+      <div id="stats-cat-list" style="padding:0 14px"></div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 5 : PARAMÈTRES -->
+  <div class="screen" id="screen-parametres">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="screen-body">
+      <div class="screen-header">
+        <svg width="18" height="18" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="27" stroke="#2d6a4f" stroke-width="3" fill="none"/><circle cx="30" cy="30" r="18" stroke="#2d6a4f" stroke-width="3" fill="none"/><circle cx="30" cy="30" r="10" stroke="#2d6a4f" stroke-width="3" fill="none"/><circle cx="30" cy="30" r="4" fill="#2d6a4f"/></svg>
+        <div class="header-title">Paramètres</div>
+      </div>
+      <div style="margin:0 14px 14px;background:var(--green-ultra);border-radius:16px;border:1px solid var(--border);padding:16px;display:flex;align-items:center;gap:14px">
+        <div class="row-icon" style="background:var(--green-pale);width:40px;height:40px;border-radius:12px;font-size:1.1rem">🏦</div>
+        <div style="flex:1">
+          <div style="font-size:0.6rem;color:var(--text3);margin-bottom:4px">Solde initial saisi</div>
+          <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:700;color:var(--green-dark)" id="param-solde-val">0,00 €</div>
+          <div style="font-size:0.57rem;color:var(--text3);margin-top:2px" id="param-date-val">Non définie</div>
+        </div>
+        <div onclick="Screens.parametres.promptSoldeInit()" style="font-size:0.61rem;color:var(--green-main);background:var(--green-pale);border:1px solid var(--border);padding:5px 10px;border-radius:8px;cursor:pointer">Modifier</div>
+      </div>
+      <div style="padding:0 14px;margin-bottom:6px">
+        <div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:8px">Foyer</div>
+        <div class="card">
+          <div class="card-row" onclick="Screens.parametres.promptNomFoyer()">
+            <div class="row-icon" style="background:var(--green-pale)">👨‍👩‍👧</div>
+            <div class="row-info"><div class="row-label">Nom du foyer</div><div class="row-sub" id="param-foyer-val">Mon Foyer</div></div>
+            <div class="row-arrow">›</div>
+          </div>
+          <div class="card-row" onclick="Router.go('chargesFixes')">
+            <div class="row-icon" style="background:var(--orange-bg)">📋</div>
+            <div class="row-info"><div class="row-label">Charges fixes</div><div class="row-sub">Gérer les charges mensuelles auto</div></div>
+            <div class="row-arrow">›</div>
+          </div>
+          <div class="card-row" onclick="Router.go('budgetsVirtuels')">
+            <div class="row-icon" style="background:var(--pearl-bg)">⬜</div>
+            <div class="row-info"><div class="row-label">Budgets virtuels & cagnottes</div><div class="row-sub">Épargne par catégorie</div></div>
+            <div class="row-arrow">›</div>
+          </div>
+          <!-- Infos licence -->
+          <div class="card-row" onclick="afficherInfoLicence()" style="border-bottom:none">
+            <div class="row-icon" style="background:var(--green-pale)">🔑</div>
+            <div class="row-info"><div class="row-label">Licence</div><div class="row-sub" id="param-licence-val">Active</div></div>
+            <div class="row-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 14px;margin-bottom:14px">
+        <div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:8px">Alertes</div>
+        <div class="card">
+          <div class="card-row" style="cursor:default">
+            <div class="row-icon" style="background:var(--red-bg)">🔔</div>
+            <div class="row-info"><div class="row-label">Dépassement budget</div><div class="row-sub">À 80% du budget atteint</div></div>
+            <div class="param-toggle" id="param-toggle-budget" onclick="Screens.parametres.toggleAlerte('alerteBudget','param-toggle-budget')"></div>
+          </div>
+          <div class="card-row" style="cursor:default">
+            <div class="row-icon" style="background:var(--green-pale)">📅</div>
+            <div class="row-info"><div class="row-label">Injection charges fixes</div><div class="row-sub">Notification le 1er du mois</div></div>
+            <div class="param-toggle" id="param-toggle-cf" onclick="Screens.parametres.toggleAlerte('alerteChargesFixes','param-toggle-cf')"></div>
+          </div>
+          <div class="card-row" style="cursor:default">
+            <div class="row-icon" style="background:var(--green-pale)">🧠</div>
+            <div class="row-info"><div class="row-label">Alertes prévision IA</div><div class="row-sub">Dépenses exceptionnelles</div></div>
+            <div class="param-toggle" id="param-toggle-ia" onclick="Screens.parametres.toggleAlerte('alerteIA','param-toggle-ia')"></div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:8px;font-size:0.6rem;color:var(--text3)">Horizon Budget v1.1 · horizonpme.fr</div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 6 : CHARGES FIXES -->
+  <div class="screen" id="screen-chargesFixes">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="screen-body">
+      <div class="screen-header">
+        <div class="back-btn" onclick="Router.back()">←</div>
+        <div class="header-title">Charges fixes</div>
+      </div>
+      <div class="info-box"><div class="info-icon">💡</div><div class="info-text">Les charges fixes sont <strong>injectées automatiquement</strong> le 1er de chaque mois.</div></div>
+      <div id="cf-list" style="padding:0 14px;margin-bottom:14px"></div>
+      <div style="padding:0 14px"><div class="btn btn-primary" onclick="Modal.open('newCF')">+ Ajouter une charge fixe</div></div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 7 : BUDGETS VIRTUELS -->
+  <div class="screen" id="screen-budgetsVirtuels">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="screen-body">
+      <div class="screen-header">
+        <div class="back-btn" onclick="Router.back()">←</div>
+        <div class="header-title">Budgets virtuels</div>
+      </div>
+      <div style="margin:0 14px 12px;background:linear-gradient(145deg,#3a4a52,#2a3a42);border-radius:20px;padding:16px 18px;position:relative;overflow:hidden;box-shadow:0 10px 28px rgba(42,58,66,0.3)">
+        <svg style="position:absolute;top:8px;right:12px;opacity:0.1" width="65" height="65" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="white" stroke-width="1.5" fill="none"/><circle cx="30" cy="30" r="20" stroke="white" stroke-width="1.5" fill="none"/><circle cx="30" cy="30" r="12" stroke="white" stroke-width="1.5" fill="none"/><circle cx="30" cy="30" r="5" fill="white"/></svg>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;position:relative;z-index:1">Total provisionné ce mois</div>
+        <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:700;color:rgba(255,255,255,0.9);position:relative;z-index:1;margin-bottom:10px" id="bv-total">0,00 €</div>
+        <div style="display:flex;gap:6px;position:relative;z-index:1;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1)">
+          <div style="background:rgba(255,255,255,0.08);border-radius:100px;padding:3px 9px;font-size:0.6rem;color:rgba(255,255,255,0.7)" id="bv-count">0 budget actif</div>
+          <div style="background:rgba(255,255,255,0.08);border-radius:100px;padding:3px 9px;font-size:0.6rem;color:rgba(255,255,255,0.7)">🏦 Cagnotte cumulative</div>
+        </div>
+      </div>
+      <div class="info-box"><div class="info-icon">🏦</div><div class="info-text">Chaque mois la provision est ajoutée à votre cagnotte. Déduisez vos dépenses de la cagnotte lors d'une saisie.</div></div>
+      <div id="bv-list" style="padding:0 14px;margin-bottom:14px"></div>
+      <div style="padding:0 14px"><div class="btn btn-primary" style="background:linear-gradient(145deg,#3a4a52,#2a3a42);box-shadow:0 6px 18px rgba(42,58,66,0.3)" onclick="Modal.open('newBV')">+ Nouveau budget virtuel</div></div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 8 : DÉTAIL CAGNOTTE -->
+  <div class="screen" id="screen-cagnotte">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="screen-body">
+      <div class="screen-header">
+        <div class="back-btn" onclick="Router.back()">←</div>
+        <div class="header-title">Cagnotte</div>
+      </div>
+      <div style="margin:0 14px 14px;background:var(--pearl-bg);border-radius:20px;border:1px solid var(--pearl-border);padding:18px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:6px" id="cagnotte-icon">💰</div>
+        <div style="font-family:var(--font-head);font-size:1rem;font-weight:700;color:var(--pearl-dark);margin-bottom:4px" id="cagnotte-nom">Ma cagnotte</div>
+        <div style="font-family:var(--font-head);font-size:2rem;font-weight:800;margin-bottom:4px" id="cagnotte-solde">0,00 €</div>
+        <div style="font-size:0.65rem;color:var(--text3)" id="cagnotte-mensuel">+0,00 € / mois</div>
+      </div>
+      <div class="section-title">Historique des mouvements</div>
+      <div id="cagnotte-liste" style="padding:0 14px"></div>
+    </div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-screen="accueil"    onclick="Router.go('accueil')"><div class="nav-icon">🏠</div><span>Accueil</span></div>
+    <div class="nav-item"        data-screen="releve"     onclick="Router.go('releve')"><div class="nav-icon">📋</div><span>Relevé</span></div>
+    <div class="nav-add"                                  onclick="Router.go('saisie')">+</div>
+    <div class="nav-item"        data-screen="stats"      onclick="Router.go('stats')"><div class="nav-icon">📊</div><span>Stats</span></div>
+    <div class="nav-item"        data-screen="parametres" onclick="Router.go('parametres')"><div class="nav-icon">⚙️</div><span>Réglages</span></div>
+  </nav>
+
+</div><!-- /#app -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="overlay-detail" onclick="Modal.close('detail')"></div>
+<div class="modal" id="modal-detail">
+  <div class="modal-handle"></div>
+  <div class="modal-title" id="detail-libelle">Transaction</div>
+  <div style="text-align:center;padding:4px 18px 16px"><div style="font-family:var(--font-head);font-size:2rem;font-weight:700" id="detail-montant">0,00 €</div></div>
+  <div style="padding:0 14px">
+    <div class="card">
+      <div class="card-row" style="cursor:default"><div class="row-icon" style="background:var(--green-pale)">📅</div><div class="row-info"><div class="row-label" id="detail-date"></div><div class="row-sub">Date</div></div></div>
+      <div class="card-row" style="cursor:default"><div class="row-icon" style="background:var(--green-pale)">📂</div><div class="row-info"><div class="row-label" id="detail-categorie"></div><div class="row-sub" id="detail-souscat"></div></div></div>
+      <div class="card-row" style="cursor:default"><div class="row-icon" style="background:var(--green-pale)">🏦</div><div class="row-info"><div class="row-label" id="detail-compte"></div><div class="row-sub">Compte</div></div></div>
+      <div class="card-row" style="cursor:default"><div class="row-icon" style="background:var(--green-pale)">🔵</div><div class="row-info"><div class="row-label" id="detail-statut"></div><div class="row-sub">Statut de pointage</div></div></div>
+    </div>
+    <div style="margin-top:12px"><div class="btn btn-danger" id="detail-delete-btn">🗑️ Supprimer</div></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="overlay-catPicker" onclick="Modal.close('catPicker')"></div>
+<div class="modal" id="modal-catPicker">
+  <div class="modal-handle"></div>
+  <div class="modal-title">Catégorie</div>
+  <div id="cat-list"     style="padding:0 14px"></div>
+  <div id="souscat-list" style="padding:0 14px;display:none"></div>
+</div>
+
+<div class="modal-overlay" id="overlay-comptePicker" onclick="Modal.close('comptePicker')"></div>
+<div class="modal" id="modal-comptePicker">
+  <div class="modal-handle"></div>
+  <div class="modal-title">Choisir un compte</div>
+  <div id="compte-list" style="padding:0 14px"></div>
+</div>
+
+<div class="modal-overlay" id="overlay-bvPicker" onclick="Modal.close('bvPicker')"></div>
+<div class="modal" id="modal-bvPicker">
+  <div class="modal-handle"></div>
+  <div class="modal-title">Déduire d'une cagnotte</div>
+  <div class="info-box" style="margin:0 14px 12px"><div class="info-icon">💡</div><div class="info-text">La dépense sera <strong>rapprochée normalement</strong> avec votre banque et <strong>déduite du solde</strong> de la cagnotte choisie.</div></div>
+  <div id="bv-picker-list" style="padding:0 14px"></div>
+</div>
+
+<div class="modal-overlay" id="overlay-newCF" onclick="Modal.close('newCF')"></div>
+<div class="modal" id="modal-newCF">
+  <div class="modal-handle"></div>
+  <div class="modal-title">Nouvelle charge fixe</div>
+  <div class="field-group">
+    <div class="card">
+      <div class="field"><div class="row-icon" style="background:var(--orange-bg)">🏷️</div><div style="flex:1"><div class="field-label">Nom</div><input type="text" id="cf-nom" placeholder="Ex: Loyer, EDF, Crédit voiture..."></div></div>
+      <div class="field"><div class="row-icon" style="background:var(--orange-bg)">💶</div><div style="flex:1"><div class="field-label">Montant mensuel (€)</div><input type="number" id="cf-montant" placeholder="0,00" step="0.01" min="0"></div></div>
+      <div class="field"><div class="row-icon" style="background:var(--orange-bg)">📂</div><div style="flex:1"><div class="field-label">Catégorie</div><input type="text" id="cf-categorie" placeholder="Ex: Logement, Crédit..."></div></div>
+      <div class="field"><div class="row-icon" style="background:var(--orange-bg)">📌</div><div style="flex:1"><div class="field-label">Sous-catégorie</div><input type="text" id="cf-souscat" placeholder="Ex: Crédit immobilier..."></div></div>
+    </div>
+  </div>
+  <div style="padding:0 14px 14px"><div class="btn btn-primary" onclick="Screens.chargesFixes.add()">✅ Ajouter la charge fixe</div></div>
+</div>
+
+<div class="modal-overlay" id="overlay-editCF" onclick="Modal.close('editCF')"></div>
+<div class="modal" id="modal-editCF">
+  <div class="modal-handle"></div>
+  <div class="modal-title">Modifier la charge</div>
+  <input type="hidden" id="edit-cf-id">
+  <div class="field-group">
+    <div class="card">
+      <div class="field"><div class="row-icon" style="background:var(--orange-bg)">🏷️</div><div style="flex:1"><div class="field-label">Nom</div><input type="text" id="edit-cf-nom"></div></div>
+      <div class="field"><div class="row-icon" style="background:var(--orange-bg)">💶</div><div style="flex:1"><div class="field-label">Montant (€)</div><input type="number" id="edit-cf-montant" step="0.01" min="0"></div></div>
+    </div>
+  </div>
+  <div style="padding:0 14px 14px"><div class="btn btn-primary" onclick="Screens.chargesFixes.saveEdit()">✅ Enregistrer</div></div>
+</div>
+
+<div class="modal-overlay" id="overlay-newBV" onclick="Modal.close('newBV')"></div>
+<div class="modal" id="modal-newBV">
+  <div class="modal-handle"></div>
+  <div class="modal-title">Nouveau budget virtuel</div>
+  <div style="padding:0 14px 8px">
+    <div style="font-size:0.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Icône</div>
+    <div class="emoji-grid" id="bv-emoji-grid"></div>
+  </div>
+  <div class="field-group">
+    <div class="card">
+      <div class="field"><div class="row-icon" style="background:var(--pearl-bg)">🏷️</div><div style="flex:1"><div class="field-label">Nom</div><input type="text" id="bv-nom" placeholder="Ex: Vacances été..."></div></div>
+      <div class="field"><div class="row-icon" style="background:var(--pearl-bg)">💶</div><div style="flex:1"><div class="field-label">Provision mensuelle (€)</div><input type="number" id="bv-montant" placeholder="0,00" step="0.01" min="0"></div></div>
+      <div class="field"><div class="row-icon" style="background:var(--pearl-bg)">🎯</div><div style="flex:1"><div class="field-label">Objectif total (€) — optionnel</div><input type="number" id="bv-objectif" placeholder="0,00" step="0.01" min="0"></div></div>
+      <div class="field"><div class="row-icon" style="background:var(--pearl-bg)">📅</div><div style="flex:1"><div class="field-label">Date d'échéance — optionnel</div><input type="date" id="bv-echeance"></div></div>
+    </div>
+  </div>
+  <div class="info-box"><div class="info-icon">🏦</div><div class="info-text">La provision est ajoutée chaque mois à votre cagnotte. Vous pouvez y déduire vos dépenses liées à ce projet.</div></div>
+  <div style="padding:0 14px 14px"><div class="btn btn-primary" style="background:linear-gradient(145deg,#3a4a52,#2a3a42)" onclick="Screens.budgetsVirtuels.add()">🏦 Créer le budget virtuel</div></div>
+</div>
+
+<div class="modal-overlay" id="overlay-editBV" onclick="Modal.close('editBV')"></div>
+<div class="modal" id="modal-editBV">
+  <div class="modal-handle"></div>
+  <div class="modal-title">Modifier le budget</div>
+  <input type="hidden" id="edit-bv-id">
+  <div class="field-group">
+    <div class="card">
+      <div class="field"><div class="row-icon" style="background:var(--pearl-bg)">🏷️</div><div style="flex:1"><div class="field-label">Nom</div><input type="text" id="edit-bv-nom"></div></div>
+      <div class="field"><div class="row-icon" style="background:var(--pearl-bg)">💶</div><div style="flex:1"><div class="field-label">Provision mensuelle (€)</div><input type="number" id="edit-bv-montant" step="0.01" min="0"></div></div>
+    </div>
+  </div>
+  <div style="padding:0 14px 14px"><div class="btn btn-primary" onclick="Screens.budgetsVirtuels.saveEdit()">✅ Enregistrer</div></div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="js/db.js"></script>
+<script src="js/router.js"></script>
+<script src="js/licence.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // ---- EMOJI PICKER ----
+  const EMOJIS = ['🏖️','🎄','🚗','🏠','🎓','💊','✈️','🎁','🏋️','🎭','🐾','📱','🍽️','🎸','🌿','🛒'];
+  document.getElementById('bv-emoji-grid').innerHTML = EMOJIS.map((e, i) =>
+    `<div class="emoji-btn${i === 0 ? ' sel' : ''}" onclick="Screens.budgetsVirtuels.selectEmoji('${e}',this)">${e}</div>`
+  ).join('');
+  Screens.budgetsVirtuels.selectedEmoji = EMOJIS[0];
+
+  // ---- FORMAT CLEF LICENCE ----
+  function formatLicenceInput(input) {
+    let val = input.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+    if (val.length > 4)  val = val.slice(0,4)  + '-' + val.slice(4);
+    if (val.length > 9)  val = val.slice(0,9)  + '-' + val.slice(9);
+    if (val.length > 14) val = val.slice(0,14) + '-' + val.slice(14);
+    if (val.length > 19) val = val.slice(0,19);
+    input.value = val;
+  }
+
+  // ---- ACTIVATION LICENCE ----
+  async function activerLicence() {
+    const input  = document.getElementById('licence-input');
+    const errEl  = document.getElementById('activation-error');
+    const btn    = document.getElementById('activation-btn');
+    const key    = input.value.trim();
+
+    errEl.style.display = 'none';
+    input.classList.remove('error', 'success');
+    btn.disabled    = true;
+    btn.textContent = '⏳ Vérification...';
+
+    const result = await LICENCE.activate(key);
+
+    if (result.success) {
+      input.classList.add('success');
+      // Animation succès
+      const overlay = document.getElementById('success-overlay');
+      overlay.classList.add('show');
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        lancerApp();
+      }, 2000);
+    } else {
+      input.classList.add('error');
+      errEl.textContent   = '❌ ' + result.error;
+      errEl.style.display = 'block';
+      btn.disabled        = false;
+      btn.textContent     = '🔑 Activer ma licence';
+    }
+  }
+
+  // ---- LANCER L'APPLICATION ----
+  function lancerApp() {
+    document.getElementById('screen-activation').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    // Afficher clé dans paramètres
+    const info = LICENCE.getInfo();
+    if (info) {
+      document.getElementById('param-licence-val').textContent =
+        info.key + ' · Active';
+    }
+  }
+
+  // ---- INFO LICENCE ----
+  function afficherInfoLicence() {
+    const info = LICENCE.getInfo();
+    if (!info) return;
+    const date = new Date(info.activatedAt).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    alert(`🔑 Licence Horizon Budget\n\nClé : ${info.key}\nActivée le : ${date}\n\nLicence à vie — 1 foyer`);
+  }
+
+  // ---- SERVICE WORKER ----
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  // ---- INITIALISATION ----
+  async function init() {
+    // Vérifier si licence déjà activée
+    const licenceOK = await LICENCE.isActivated();
+
+    if (licenceOK) {
+      // Licence OK → on lance l'appli directement
+      lancerApp();
+      await initDB();
+      await seedDefaultData();
+      await Screens.chargesFixes.injecterToutesLeChargesDuMois();
+      await provisionnerBudgetsDuMois();
+      Router.go('accueil');
+    } else {
+      // Pas de licence → écran d'activation
+      // L'appli reste masquée
+    }
+  }
+
+  // ---- INIT APRÈS ACTIVATION ----
+  const _lancerAppOrig = lancerApp;
+  lancerApp = async function() {
+    _lancerAppOrig();
+    await initDB();
+    await seedDefaultData();
+    await Screens.chargesFixes.injecterToutesLeChargesDuMois();
+    await provisionnerBudgetsDuMois();
+    Router.go('accueil');
+  };
+
+  init();
+</script>
+</body>
+</html>
