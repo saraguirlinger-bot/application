@@ -182,7 +182,7 @@ window.demarrerApp = startApp;
 const APP_VERSION = '3.3.0';
 const CHANGELOG = [
   {
-    version: '3.2.0',
+    version: '3.3.0',
     date: '2026-06',
     titre: 'Mise à jour majeure',
     nouveautes: [
