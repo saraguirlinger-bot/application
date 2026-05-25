@@ -179,13 +179,16 @@ window.demarrerApp = startApp;
 /* ==========================================
    SYSTÈME DE NOUVEAUTÉS
    ========================================== */
-const APP_VERSION = '3.2.0';
+const APP_VERSION = '3.3.0';
 const CHANGELOG = [
   {
     version: '3.2.0',
     date: '2026-06',
     titre: 'Mise à jour majeure',
     nouveautes: [
+      'Correction du système de mise à jour PWA',
+      'Purge automatique des anciens caches iPhone',
+      'Correction des boutons non cliquables',
       'Séparation enveloppes et cagnottes — deux concepts distincts',
       'Cagnottes en violet/indigo — épargne cumulative permanente',
       'Simulation de dépense améliorée — projection fin de mois',
