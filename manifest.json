@@ -1,0 +1,37 @@
+{
+  "name": "Horizon Budget",
+  "short_name": "Horizon Budget",
+  "description": "Votre gestionnaire de budget personnel intelligent — par Horizon PME",
+  "start_url": "https://www.horizonpme.fr/application/",
+  "scope": "https://www.horizonpme.fr/application/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#2d6a4f",
+  "background_color": "#f2f9f5",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["finance", "productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "https://www.horizonpme.fr/application/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://www.horizonpme.fr/application/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nouvelle dépense",
+      "short_name": "Dépense",
+      "url": "https://www.horizonpme.fr/application/",
+      "icons": [{ "src": "https://www.horizonpme.fr/application/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
+}

@@ -1,0 +1,20 @@
+# Horizon Budget — .htaccess pour /www/application/ UNIQUEMENT
+
+# Type MIME pour le manifest
+AddType application/manifest+json .json
+
+# Headers Service Worker
+<FilesMatch "sw\.js$">
+  Header set Service-Worker-Allowed "/application/"
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+</FilesMatch>
+
+# Ne pas cacher index.html
+<FilesMatch "index\.html$">
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+</FilesMatch>
+
+# Cache long pour les assets
+<FilesMatch "\.(css|js|png|jpg|ico)$">
+  Header set Cache-Control "max-age=86400"
+</FilesMatch>
