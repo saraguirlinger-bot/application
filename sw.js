@@ -3,7 +3,7 @@
    URL : https://www.horizonpme.fr/application/
    ============================================ */
 
-const CACHE_NAME = 'horizon-budget-v2';
+const CACHE_NAME = 'horizon-budget-v3.3';
 
 const STATIC_FILES = [
   '/application/',
@@ -94,4 +94,4 @@ self.addEventListener('message', event => {
   }
 });
 
-console.log('[SW] Horizon Budget v2.1 chargé');
+console.log('[SW] Horizon Budget v3.3 chargé');
