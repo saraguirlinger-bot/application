@@ -86,7 +86,9 @@
 
 html, body {
   height: 100%;
-  overflow: hidden;
+overflow-x: hidden;
+  overflow-y: auto;
+
 }
 
 body {
@@ -119,7 +121,8 @@ input, textarea, [contenteditable] {
   max-width: 480px;
   margin: 0 auto;
   position: relative;
-  overflow: hidden;
+ overflow-x: hidden;
+ overflow-y: auto;
   background: var(--noir);
   box-shadow: 0 0 100px rgba(0,0,0,0.8);
 }
