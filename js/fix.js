@@ -228,3 +228,85 @@
   }, 3000);
 
 })();
+
+/* FIX BOUTONS ACTIONS — v3.4 */
+(function () {
+  function clean(txt) {
+    return (txt || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function openModal(id) {
+    if (window.Modal && typeof window.Modal.open === "function") {
+      window.Modal.open(id);
+    } else {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.classList.add("active");
+        modal.style.display = "flex";
+      }
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    const el = e.target.closest("button, a, .btn, .row, .setting-row, .action-card, .card, [role='button']");
+    if (!el) return;
+
+    const txt = clean(el.textContent);
+
+    if (txt.includes("ajouter une charge fixe")) {
+      e.preventDefault();
+      openModal("newCF");
+      return;
+    }
+
+    if (txt.includes("ajouter une charge variable")) {
+      e.preventDefault();
+      openModal("newCV");
+      return;
+    }
+
+    if (txt.includes("nouveau budget virtuel")) {
+      e.preventDefault();
+      openModal("newBV");
+      return;
+    }
+
+    if (txt.includes("nouvelle cagnotte")) {
+      e.preventDefault();
+      openModal("newCagnotte");
+      return;
+    }
+
+    if (txt.includes("confirmer la clôture")) {
+      e.preventDefault();
+      if (typeof window.confirmerCloture === "function") window.confirmerCloture();
+      return;
+    }
+
+    if (txt.includes("ajouter la charge fixe")) {
+      e.preventDefault();
+      if (typeof window.ajouterChargeFixes === "function") window.ajouterChargeFixes();
+      return;
+    }
+
+    if (txt === "✅ ajouter" || txt.includes("ajouter")) {
+      if (document.querySelector("#newCV.active") && typeof window.ajouterChargeVariable === "function") {
+        e.preventDefault();
+        window.ajouterChargeVariable();
+        return;
+      }
+    }
+
+    if (txt.includes("créer le budget virtuel")) {
+      e.preventDefault();
+      if (typeof window.ajouterBudgetVirtuel === "function") window.ajouterBudgetVirtuel();
+      return;
+    }
+
+    if (txt.includes("créer la cagnotte")) {
+      e.preventDefault();
+      if (typeof window.creerCagnotte === "function") window.creerCagnotte();
+      return;
+    }
+  }, true);
+})();
