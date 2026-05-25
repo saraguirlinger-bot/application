@@ -133,12 +133,24 @@
         if (!el._fixApplied) {
           el._fixApplied = true;
           el.addEventListener('touchend', function(e) {
-            // Ne pas déclencher si scroll
-            if (!this._touchMoved) {
-              e.preventDefault();
-              this.click();
-            }
-          }, { passive: false });
+
+  // IMPORTANT :
+  // Ne jamais bloquer les champs de saisie iPhone
+  if (
+    this.tagName === 'INPUT' ||
+    this.tagName === 'TEXTAREA' ||
+    this.tagName === 'SELECT' ||
+    this.isContentEditable
+  ) {
+    return;
+  }
+
+  // Ne pas déclencher si scroll
+  if (!this._touchMoved) {
+    this.click();
+  }
+
+}, { passive: true });
           el.addEventListener('touchstart', function() {
             this._touchMoved = false;
           }, { passive: true });
