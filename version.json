@@ -1,0 +1,6 @@
+{
+  "version": "3.5.0",
+  "cache": "horizon-budget-v3.5",
+  "date": "2026-06",
+  "notes": "Purge cache mobile, fix écran noir, saisie clavier natif"
+}
